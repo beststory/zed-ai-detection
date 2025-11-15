@@ -1,0 +1,74 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+*.egg-info/
+dist/
+build/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+/tmp/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment
+.env
+.env.local
+
+# Models
+*.pt
+*.onnx
+*.pb
+models/
+
+# Node modules
+node_modules/
+frontend/node_modules/
+frontend/dist/
+
+# Cache
+.cache/
+*.cache
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
+*~
+
+# Review files
+review_*.json
+review_*.md
+LATEST_REVIEW.md
+.review
+improvement_log.txt
+
+# Data files
+data/baselines/
+*.npy
+
+# SDK installers
+*.whl
+*.deb
+*.run
+
+# Config backups
+*.backup

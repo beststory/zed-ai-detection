@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZED 2i Camera Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 20px 30px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+
+        .header-left h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .header-left p {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #4ade80;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Tab Navigation */
+        .tab-nav {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+        }
+
+        .tab-button {
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid transparent;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .tab-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .tab-button.active {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Video Grid */
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .video-panel {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+
+        .video-panel h2 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .video-icon {
+            width: 24px;
+            height: 24px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .video-container {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: #000;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .video-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .video-overlay {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            padding: 6px 12px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px 0 rgba(31, 38, 135, 0.25);
+        }
+
+        .stat-label {
+            font-size: 13px;
+            opacity: 0.8;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        /* Point Cloud Canvas */
+        .pointcloud-container {
+            width: 100%;
+            height: 600px;
+            background: #000;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #pointcloud-canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Info Panel */
+        .info-panel {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+
+        .info-panel h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .info-label {
+            font-size: 12px;
+            opacity: 0.7;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .info-value {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        /* Events Grid */
+        .events-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .event-feed-panel, .event-stats-panel, .event-history-panel {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+
+        /* Event Filters */
+        .event-filters {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .filter-btn {
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            color: #fff;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .filter-btn.active {
+            background: #64B5F6;
+            border-color: #64B5F6;
+        }
+
+        /* Event List */
+        .event-list {
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .event-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 3px solid #64B5F6;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .event-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+
+        .event-item.zone_entry { border-left-color: #4ade80; }
+        .event-item.zone_exit { border-left-color: #fb923c; }
+        .event-item.idle { border-left-color: #fbbf24; }
+        .event-item.distance_change { border-left-color: #60a5fa; }
+        .event-item.speed_alert { border-left-color: #ef4444; }
+        .event-item.fall { border-left-color: #dc2626; }
+
+        .event-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .event-type {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .event-time {
+            font-size: 11px;
+            opacity: 0.7;
+        }
+
+        .event-details {
+            font-size: 12px;
+            opacity: 0.8;
+            line-height: 1.5;
+        }
+
+        .event-placeholder, .object-placeholder {
+            text-align: center;
+            padding: 40px 20px;
+            color: #888;
+            font-size: 14px;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #64B5F6;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.7;
+            text-transform: uppercase;
+        }
+
+        /* Objects List */
+        .objects-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .object-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            font-size: 13px;
+        }
+
+        .object-id {
+            font-weight: 600;
+            color: #64B5F6;
+        }
+
+        .object-info {
+            font-size: 11px;
+            opacity: 0.7;
+            margin-top: 4px;
+        }
+
+        /* Zones List */
+        .zones-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .zone-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .zone-name {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .zone-type {
+            font-size: 11px;
+            padding: 4px 10px;
+            background: rgba(100, 181, 246, 0.3);
+            border-radius: 12px;
+        }
+
+        .zone-type.restricted {
+            background: rgba(239, 68, 68, 0.3);
+        }
+
+        /* Event History Table */
+        .event-table-container {
+            overflow-x: auto;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .event-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .event-table thead {
+            background: rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .event-table th {
+            padding: 12px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .event-table td {
+            padding: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 13px;
+        }
+
+        .event-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .video-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .tab-nav {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+            }
+
+            .events-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="header-left">
+                <h1>🎥 ZED 2i Camera Dashboard</h1>
+                <p>Stereolabs ZED 2i Depth Camera • Real-time Perception</p>
+            </div>
+            <div class="status-badge">
+                <span class="status-dot"></span>
+                <span id="connection-status">연결 중...</span>
+            </div>
+        </header>
+
+        <!-- Tab Navigation -->
+        <div class="tab-nav">
+            <button class="tab-button active" onclick="switchTab('video')">📹 Video Streams</button>
+            <button class="tab-button" onclick="switchTab('pointcloud')">🌐 Point Cloud</button>
+            <button class="tab-button" onclick="switchTab('tracking')">🏃 Body Tracking</button>
+            <button class="tab-button" onclick="switchTab('sensors')">📊 Sensor Data</button>
+            <button class="tab-button" onclick="switchTab('aimonitoring')">🤖 AI Monitoring</button>
+            <button class="tab-button" onclick="switchTab('events')">🎯 이벤트 모니터링</button>
+            <button class="tab-button" onclick="switchTab('ipcameras')">📷 IP Cameras</button>
+            <button class="tab-button" onclick="switchTab('settings')">⚙️ Settings</button>
+        </div>
+
+        <!-- Video Streams Tab -->
+        <div id="tab-video" class="tab-content active">
+            <div class="video-grid">
+                <div class="video-panel">
+                    <h2>
+                        <span class="video-icon">🎬</span>
+                        RGB Camera
+                    </h2>
+                    <div class="video-container">
+                        <img id="rgb-stream" src="" alt="RGB Stream">
+                        <div class="video-overlay">
+                            <span id="rgb-fps">0 FPS</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="video-panel">
+                    <h2>
+                        <span class="video-icon">🌈</span>
+                        Depth Map
+                    </h2>
+                    <div class="video-container">
+                        <img id="depth-stream" src="" alt="Depth Stream">
+                        <div class="video-overlay">
+                            <span id="depth-fps">0 FPS</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Camera FPS</div>
+                    <div class="stat-value"><span id="camera-fps">15</span> fps</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Resolution</div>
+                    <div class="stat-value">VGA</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Depth Mode</div>
+                    <div class="stat-value">ULTRA</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Camera Mode</div>
+                    <div class="stat-value" id="camera-mode-stat">ZED 2i</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Point Cloud Tab -->
+        <div id="tab-pointcloud" class="tab-content">
+            <div class="video-panel">
+                <h2>
+                    <span class="video-icon">🌐</span>
+                    3D Point Cloud Visualization
+                </h2>
+                <div class="pointcloud-container" id="pointcloud-canvas">
+                    <div class="video-overlay">
+                        Initializing 3D renderer...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Body Tracking Tab -->
+        <div id="tab-tracking" class="tab-content">
+            <div class="video-panel">
+                <h2>
+                    <span class="video-icon">🏃</span>
+                    Body Tracking & Skeleton Detection
+                </h2>
+                <div class="video-container">
+                    <img id="tracking-stream" src="" alt="Body Tracking">
+                    <div class="video-overlay">
+                        Body tracking • Coming soon
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sensor Data Tab -->
+        <div id="tab-sensors" class="tab-content">
+            <div class="info-panel">
+                <h3>📊 IMU & Sensor Data</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">Acceleration X</span>
+                        <span class="info-value" id="accel-x">0.00 m/s²</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Acceleration Y</span>
+                        <span class="info-value" id="accel-y">0.00 m/s²</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Acceleration Z</span>
+                        <span class="info-value" id="accel-z">0.00 m/s²</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Gyroscope X</span>
+                        <span class="info-value" id="gyro-x">0.00 rad/s</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Gyroscope Y</span>
+                        <span class="info-value" id="gyro-y">0.00 rad/s</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Gyroscope Z</span>
+                        <span class="info-value" id="gyro-z">0.00 rad/s</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Temperature</span>
+                        <span class="info-value" id="temperature">--°C</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Barometer</span>
+                        <span class="info-value" id="barometer">-- hPa</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Monitoring Tab -->
+        <div id="tab-aimonitoring" class="tab-content">
+            <!-- Detection Controls -->
+            <div class="video-panel" style="margin-bottom: 20px;">
+                <h2>
+                    <span class="video-icon">🎮</span>
+                    AI 감지 제어
+                </h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
+                    <button class="tab-button" onclick="detectMotion()" style="margin: 0;">
+                        🏃 모션 감지
+                    </button>
+                    <button class="tab-button" onclick="detectPerson()" style="margin: 0;">
+                        👤 사람 감지
+                    </button>
+                    <button class="tab-button" onclick="setStructureBaseline()" style="margin: 0;">
+                        📏 기준선 설정
+                    </button>
+                    <button class="tab-button" onclick="detectStructure()" style="margin: 0;">
+                        🏗️ 구조 변화 감지
+                    </button>
+                    <button class="tab-button" onclick="analyzeScene()" style="margin: 0;">
+                        🔍 장면 분석 (AI)
+                    </button>
+                    <button class="tab-button" onclick="analyzeAnomaly()" style="margin: 0;">
+                        ⚠️ 이상 감지 (AI)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Detection Results Grid -->
+            <div class="video-grid">
+                <!-- Motion Detection -->
+                <div class="video-panel">
+                    <h2>
+                        <span class="video-icon">🏃</span>
+                        모션 감지
+                    </h2>
+                    <div class="info-panel" style="padding: 15px;">
+                        <div class="info-item" style="margin-bottom: 10px;">
+                            <span class="info-label">상태</span>
+                            <span class="info-value" id="motion-status">대기 중...</span>
+                        </div>
+                        <div class="info-item" style="margin-bottom: 10px;">
+                            <span class="info-label">감지 횟수</span>
+                            <span class="info-value" id="motion-count">0</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">마지막 감지 시간</span>
+                            <span class="info-value" id="motion-time">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Person Detection -->
+                <div class="video-panel">
+                    <h2>
+                        <span class="video-icon">👤</span>
+                        사람 감지 (YOLO)
+                    </h2>
+                    <div class="info-panel" style="padding: 15px;">
+                        <div class="info-item" style="margin-bottom: 10px;">
+                            <span class="info-label">감지된 사람 수</span>
+                            <span class="info-value" id="person-count">0</span>
+                        </div>
+                        <div class="info-item" style="margin-bottom: 10px;">
+                            <span class="info-label">신뢰도</span>
+                            <span class="info-value" id="person-confidence">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">마지막 감지 시간</span>
+                            <span class="info-value" id="person-time">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Structure Change -->
+                <div class="video-panel">
+                    <h2>
+                        <span class="video-icon">🏗️</span>
+                        구조 변화 감지
+                    </h2>
+                    <div class="info-panel" style="padding: 15px;">
+                        <div class="info-item" style="margin-bottom: 10px;">
+                            <span class="info-label">기준선 설정</span>
+                            <span class="info-value" id="structure-baseline">미설정</span>
+                        </div>
+                        <div class="info-item" style="margin-bottom: 10px;">
+                            <span class="info-label">변위 (mm)</span>
+                            <span class="info-value" id="structure-displacement-mm">0.00</span>
+                        </div>
+                        <div class="info-item" style="margin-bottom: 10px;">
+                            <span class="info-label">변위 (px)</span>
+                            <span class="info-value" id="structure-displacement-px">0.00</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">변화 감지</span>
+                            <span class="info-value" id="structure-detected">감지 안됨</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Analysis -->
+                <div class="video-panel">
+                    <h2>
+                        <span class="video-icon">🤖</span>
+                        AI 분석 (Ollama)
+                    </h2>
+                    <div class="info-panel" style="padding: 15px;">
+                        <div class="info-item" style="margin-bottom: 10px;">
+                            <span class="info-label">분석 타입</span>
+                            <span class="info-value" id="ai-type">-</span>
+                        </div>
+                        <div class="info-item" style="margin-bottom: 10px;">
+                            <span class="info-label">신뢰도</span>
+                            <span class="info-value" id="ai-confidence">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">처리 시간</span>
+                            <span class="info-value" id="ai-processing-time">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Analysis Results -->
+            <div class="video-panel" style="margin-top: 20px;">
+                <h2>
+                    <span class="video-icon">📝</span>
+                    AI 분석 결과
+                </h2>
+                <div class="info-panel" style="padding: 15px;">
+                    <div class="info-item">
+                        <span class="info-label">설명</span>
+                        <div id="ai-description" style="margin-top: 10px; padding: 15px; background: rgba(0, 0, 0, 0.3); border-radius: 8px; min-height: 100px; white-space: pre-wrap; font-size: 14px; line-height: 1.6;">
+                            AI 분석 결과가 여기에 표시됩니다...
+                        </div>
+                    </div>
+                    <div class="info-item" style="margin-top: 20px;">
+                        <span class="info-label">이상 항목</span>
+                        <div id="ai-anomalies" style="margin-top: 10px; padding: 15px; background: rgba(255, 0, 0, 0.1); border-radius: 8px; min-height: 50px;">
+                            <span style="opacity: 0.7;">이상 항목이 없습니다.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Statistics -->
+            <div class="stats-grid" style="margin-top: 20px;">
+                <div class="stat-card">
+                    <div class="stat-label">총 모션 감지</div>
+                    <div class="stat-value"><span id="stats-motion">0</span></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">총 사람 감지</div>
+                    <div class="stat-value"><span id="stats-person">0</span></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">총 구조 변화</div>
+                    <div class="stat-value"><span id="stats-structure">0</span></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">총 AI 분석</div>
+                    <div class="stat-value"><span id="stats-ai">0</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 이벤트 모니터링 Tab -->
+        <div id="tab-events" class="tab-content">
+            <div class="events-grid">
+                <!-- Real-time Event Feed -->
+                <div class="event-feed-panel">
+                    <h2>
+                        <span class="video-icon">🎯</span>
+                        실시간 이벤트 피드
+                        <span id="ws-status" style="font-size: 12px; margin-left: 10px;">
+                            <span class="status-dot" style="background: #888;"></span> 연결 대기중
+                        </span>
+                    </h2>
+                    <div class="event-filters">
+                        <button class="filter-btn active" data-filter="all">전체</button>
+                        <button class="filter-btn" data-filter="zone_entry">구역 진입</button>
+                        <button class="filter-btn" data-filter="zone_exit">구역 이탈</button>
+                        <button class="filter-btn" data-filter="idle">정지</button>
+                        <button class="filter-btn" data-filter="distance_change">거리 변화</button>
+                        <button class="filter-btn" data-filter="speed_alert">속도 경고</button>
+                    </div>
+                    <div id="event-feed" class="event-list">
+                        <div class="event-placeholder">이벤트를 기다리는 중...</div>
+                    </div>
+                </div>
+
+                <!-- Event Statistics -->
+                <div class="event-stats-panel">
+                    <h2>
+                        <span class="video-icon">📊</span>
+                        시스템 통계
+                    </h2>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="total-events">0</div>
+                            <div class="stat-label">총 이벤트</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="active-objects">0</div>
+                            <div class="stat-label">추적 객체</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="active-zones">2</div>
+                            <div class="stat-label">활성 구역</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="events-per-min">0</div>
+                            <div class="stat-label">이벤트/분</div>
+                        </div>
+                    </div>
+
+                    <!-- Active Objects List -->
+                    <h3 style="margin-top: 20px;">🎯 추적 중인 객체</h3>
+                    <div id="active-objects-list" class="objects-list">
+                        <div class="object-placeholder">추적 중인 객체가 없습니다</div>
+                    </div>
+
+                    <!-- Zone Information -->
+                    <h3 style="margin-top: 20px;">📍 모니터링 구역</h3>
+                    <div id="zones-list" class="zones-list">
+                        <div class="zone-item">
+                            <div class="zone-name">전체 영역</div>
+                            <div class="zone-type">monitoring</div>
+                        </div>
+                        <div class="zone-item">
+                            <div class="zone-name">제한 구역 예시</div>
+                            <div class="zone-type">restricted</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Event History Table -->
+            <div class="event-history-panel" style="margin-top: 20px;">
+                <h2>
+                    <span class="video-icon">📜</span>
+                    이벤트 히스토리
+                    <button id="refresh-history" style="float: right; padding: 5px 15px; background: #64B5F6; border: none; border-radius: 4px; color: white; cursor: pointer;">
+                        🔄 새로고침
+                    </button>
+                </h2>
+                <div class="event-table-container">
+                    <table id="event-history-table" class="event-table">
+                        <thead>
+                            <tr>
+                                <th>시간</th>
+                                <th>이벤트 타입</th>
+                                <th>카메라</th>
+                                <th>객체 ID</th>
+                                <th>구역</th>
+                                <th>위치 (x, y, z)</th>
+                                <th>거리/속도</th>
+                                <th>신뢰도</th>
+                            </tr>
+                        </thead>
+                        <tbody id="event-history-body">
+                            <tr>
+                                <td colspan="8" style="text-align: center; color: #888;">
+                                    데이터를 불러오는 중...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- IP Cameras Tab -->
+        <div id="tab-ipcameras" class="tab-content">
+            <div class="video-panel">
+                <h2>
+                    <span class="video-icon">📷</span>
+                    한화 Wisenet CCTV
+                </h2>
+                <div class="video-container">
+                    <iframe
+                        id="hanwha-camera-iframe"
+                        src="http://192.168.1.50/wmf/index.html"
+                        style="width: 100%; height: 600px; border: none; background: #000;"
+                        allow="camera; microphone"
+                    ></iframe>
+                    <div class="video-overlay">
+                        <span>IP: 192.168.1.50</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Camera Information -->
+            <div class="info-panel" style="margin-top: 20px;">
+                <h3>📷 카메라 정보</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">제조사</span>
+                        <span class="info-value">한화 Wisenet</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">IP 주소</span>
+                        <span class="info-value">192.168.1.50</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">RTSP 포트</span>
+                        <span class="info-value">554</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">웹 인터페이스</span>
+                        <span class="info-value">
+                            <a href="http://192.168.1.50/wmf/index.html" target="_blank" style="color: #64B5F6;">
+                                바로가기 →
+                            </a>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Tab -->
+        <div id="tab-settings" class="tab-content">
+            <div class="info-panel">
+                <h3>⚙️ Camera Settings</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">API URL</span>
+                        <span class="info-value" id="api-url">http://192.168.1.3:8005</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">SDK Version</span>
+                        <span class="info-value">5.1.1</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Camera Model</span>
+                        <span class="info-value">ZED 2i</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Serial Number</span>
+                        <span class="info-value">SN-XXXXX</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="/app.js"></script>
+</body>
+</html>

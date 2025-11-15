@@ -1,0 +1,20 @@
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+websockets==12.0
+python-multipart==0.0.6
+opencv-python==4.8.1.78
+numpy==1.26.2
+pydantic==2.5.0
+pydantic-settings==2.1.0
+python-dotenv==1.0.0
+pillow==10.1.0
+
+# AI/ML 패키지
+ultralytics==8.0.220
+httpx==0.25.2
+torch==2.1.1
+torchvision==0.16.1
+
+# 영상 처리
+scikit-image==0.22.0
+scipy==1.11.4
